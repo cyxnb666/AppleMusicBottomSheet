@@ -10,6 +10,7 @@ import SwiftUI
 struct ExpandedBottomSheet: View {
     @Binding var expandSheet: Bool
     var animation: Namespace.ID
+    @ObservedObject var audioManager: AudioManager
     /// View Properties
     @State private var animateContent: Bool = false
     @State private var offsetY: CGFloat = 0
@@ -30,7 +31,7 @@ struct ExpandedBottomSheet: View {
                             .opacity(animateContent ? 1 : 0)
                     })
                     .overlay(alignment: .top) {
-                        MusicInfo(expandSheet: $expandSheet, animation: animation)
+                        MusicInfo(expandSheet: $expandSheet, animation: animation, audioManager: audioManager)
                         /// Disabling Interaction (Since it's not Necessary Here)
                             .allowsHitTesting(false)
                             .opacity(animateContent ? 0 : 1)
@@ -52,11 +53,19 @@ struct ExpandedBottomSheet: View {
                     GeometryReader {
                         let size = $0.size
                         
-                        Image("Artwork")
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: size.width, height: size.height)
-                            .clipShape(RoundedRectangle(cornerRadius: animateContent ? 15 : 5, style: .continuous))
+                        if let artwork = audioManager.currentTrack?.artwork {
+                            Image(uiImage: artwork)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: size.width, height: size.height)
+                                .clipShape(RoundedRectangle(cornerRadius: animateContent ? 15 : 5, style: .continuous))
+                        } else {
+                            Image("Artwork")
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: size.width, height: size.height)
+                                .clipShape(RoundedRectangle(cornerRadius: animateContent ? 15 : 5, style: .continuous))
+                        }
                     }
                     .matchedGeometryEffect(id: "ARTWORK", in: animation)
                     /// For Square Artwork Image
@@ -116,12 +125,12 @@ struct ExpandedBottomSheet: View {
                 VStack(spacing: spacing) {
                     HStack(alignment: .center, spacing: 15) {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Look What You Made Me do")
+                            Text(audioManager.currentTrack?.title ?? "No Track Playing")
                                 .font(.title3)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.white)
                             
-                            Text("Taylor Swift")
+                            Text(audioManager.currentTrack?.artist ?? "Unknown Artist")
                                 .foregroundColor(.gray)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -142,21 +151,35 @@ struct ExpandedBottomSheet: View {
                     }
                     
                     /// Timing Indicator
-                    Capsule()
-                        .fill(.ultraThinMaterial)
-                        .environment(\.colorScheme, .light)
-                        .frame(height: 5)
-                        .padding(.top, spacing)
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(.ultraThinMaterial)
+                            .environment(\.colorScheme, .light)
+                            .frame(height: 5)
+                        
+                        Capsule()
+                            .fill(.white)
+                            .frame(width: max(0, CGFloat(audioManager.currentTime / max(audioManager.duration, 1)) * (size.width - 50)), height: 5)
+                    }
+                    .padding(.top, spacing)
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                let progress = min(max(0, value.location.x / (size.width - 50)), 1)
+                                let newTime = progress * audioManager.duration
+                                audioManager.seek(to: newTime)
+                            }
+                    )
                     
                     /// Timing Label View
                     HStack {
-                        Text("0:00")
+                        Text(formatTime(audioManager.currentTime))
                             .font(.caption)
                             .foregroundColor(.gray)
                         
                         Spacer(minLength: 0)
                         
-                        Text("3:33")
+                        Text(formatTime(audioManager.duration))
                             .font(.caption)
                             .foregroundColor(.gray)
                     }
@@ -167,7 +190,7 @@ struct ExpandedBottomSheet: View {
                 /// Playback Controls
                 HStack(spacing: size.width * 0.18) {
                     Button {
-                        
+                        audioManager.previousTrack()
                     } label: {
                         Image(systemName: "backward.fill")
                         /// Dynamic Sizing for Smaller to Larger iPhones
@@ -176,15 +199,15 @@ struct ExpandedBottomSheet: View {
                     
                     /// Making Play/Pause Little Bigger
                     Button {
-                        
+                        audioManager.togglePlayPause()
                     } label: {
-                        Image(systemName: "pause.fill")
+                        Image(systemName: audioManager.isPlaying ? "pause.fill" : "play.fill")
                         /// Dynamic Sizing for Smaller to Larger iPhones
                             .font(size.height < 300 ? .largeTitle : .system(size: 50))
                     }
                     
                     Button {
-                        
+                        audioManager.nextTrack()
                     } label: {
                         Image(systemName: "forward.fill")
                         /// Dynamic Sizing for Smaller to Larger iPhones
@@ -200,10 +223,23 @@ struct ExpandedBottomSheet: View {
                         Image(systemName: "speaker.fill")
                             .foregroundColor(.gray)
                         
-                        Capsule()
-                            .fill(.ultraThinMaterial)
-                            .environment(\.colorScheme, .light)
-                            .frame(height: 5)
+                        ZStack(alignment: .leading) {
+                            Capsule()
+                                .fill(.ultraThinMaterial)
+                                .environment(\.colorScheme, .light)
+                                .frame(height: 5)
+                            
+                            Capsule()
+                                .fill(.white)
+                                .frame(width: CGFloat(audioManager.volume) * (size.width - 80), height: 5)
+                        }
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    let progress = min(max(0, value.location.x / (size.width - 80)), 1)
+                                    audioManager.setVolume(Float(progress))
+                                }
+                        )
                         
                         Image(systemName: "speaker.wave.3.fill")
                             .foregroundColor(.gray)
@@ -244,6 +280,12 @@ struct ExpandedBottomSheet: View {
                 .frame(height: size.height / 2.5, alignment: .bottom)
             }
         }
+    }
+    
+    private func formatTime(_ time: TimeInterval) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return String(format: "%d:%02d", minutes, seconds)
     }
 }
 

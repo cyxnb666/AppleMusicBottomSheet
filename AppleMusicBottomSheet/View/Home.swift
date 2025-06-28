@@ -12,6 +12,9 @@ struct Home: View {
     @State private var expandSheet: Bool = false
     @State private var hideTabBar: Bool = false
     @Namespace private var animation
+    @StateObject private var audioManager = AudioManager()
+    @StateObject private var musicLibrary = MusicLibrary()
+    @State private var showingDocumentPicker = false
     var body: some View {
         /// Tab View
         TabView {
@@ -22,7 +25,10 @@ struct Home: View {
             /// Sample Tab's
             SampleTab("Browse", "square.grid.2x2.fill")
             SampleTab("Radio", "dot.radiowaves.left.and.right")
-            SampleTab("Music", "play.square.stack")
+            MusicLibraryView()
+                .setTabItem("Music", "play.square.stack")
+                .setTabBarBackground(.init(.ultraThickMaterial))
+                .hideTabBar(hideTabBar)
             SampleTab("Search", "magnifyingglass")
         }
         /// Changing Tab Indicator Color
@@ -30,9 +36,19 @@ struct Home: View {
         .safeAreaInset(edge: .bottom) {
             CustomBottomSheet()
         }
+        .sheet(isPresented: $showingDocumentPicker) {
+            DocumentPickerView(musicLibrary: musicLibrary, audioManager: audioManager)
+        }
+        .environmentObject(audioManager)
+        .environmentObject(musicLibrary)
+        .onAppear {
+            if !musicLibrary.tracks.isEmpty && audioManager.playlist.isEmpty {
+                audioManager.addToPlaylist(musicLibrary.tracks)
+            }
+        }
         .overlay {
             if expandSheet {
-                ExpandedBottomSheet(expandSheet: $expandSheet, animation: animation)
+                ExpandedBottomSheet(expandSheet: $expandSheet, animation: animation, audioManager: audioManager)
                 /// Transition for direct slide down closing
                     .transition(.asymmetric(insertion: .identity, removal: .move(edge: .bottom)))
             }
@@ -77,6 +93,15 @@ struct Home: View {
                             .font(.title3)
                     }
                 }
+                
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        showingDocumentPicker = true
+                    } label: {
+                        Image(systemName: "music.note.list")
+                            .font(.title3)
+                    }
+                }
             }
         }
     }
@@ -94,7 +119,7 @@ struct Home: View {
                     .fill(.ultraThickMaterial)
                     .overlay {
                         /// Music Info
-                        MusicInfo(expandSheet: $expandSheet, animation: animation)
+                        MusicInfo(expandSheet: $expandSheet, animation: animation, audioManager: audioManager)
                     }
                     .matchedGeometryEffect(id: "BGVIEW", in: animation)
                     /// Scale effect for visual deception during closing
@@ -111,6 +136,89 @@ struct Home: View {
         })
         /// 49: Default Tab Bar Height
         .offset(y: -49)
+    }
+    
+    /// Music Library View
+    @ViewBuilder
+    func MusicLibraryView() -> some View {
+        NavigationStack {
+            if musicLibrary.tracks.isEmpty {
+                VStack(spacing: 20) {
+                    Image(systemName: "music.note")
+                        .font(.system(size: 60))
+                        .foregroundColor(.gray)
+                    
+                    Text("No Music Added")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                    
+                    Text("Import music files to get started")
+                        .foregroundColor(.secondary)
+                    
+                    Button {
+                        showingDocumentPicker = true
+                    } label: {
+                        Text("Import Music")
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(.blue)
+                            .cornerRadius(8)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List {
+                    ForEach(Array(musicLibrary.tracks.enumerated()), id: \.element.id) { index, track in
+                        MusicRowView(track: track)
+                            .onTapGesture {
+                                audioManager.setPlaylist(musicLibrary.tracks, startIndex: index)
+                                audioManager.play()
+                            }
+                    }
+                    .onDelete { indexSet in
+                        // 检查是否删除当前播放的歌曲
+                        for index in indexSet {
+                            if let currentTrack = audioManager.currentTrack,
+                               musicLibrary.tracks[index].id == currentTrack.id {
+                                // 停止播放
+                                audioManager.pause()
+                            }
+                        }
+                        
+                        // 删除歌曲
+                        musicLibrary.deleteTracks(at: indexSet)
+                        
+                        // 更新播放列表
+                        if !musicLibrary.tracks.isEmpty {
+                            audioManager.setPlaylist(musicLibrary.tracks)
+                        } else {
+                            // 如果没有歌曲了，清空播放列表
+                            audioManager.playlist.removeAll()
+                            audioManager.clearCurrentTrack()
+                        }
+                    }
+                }
+                .listStyle(PlainListStyle())
+            }
+        }
+        .navigationTitle("Music")
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                if !musicLibrary.tracks.isEmpty {
+                    EditButton()
+                }
+            }
+            
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showingDocumentPicker = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.title3)
+                }
+            }
+        }
     }
     
     /// Generates Sample View with Tab Label

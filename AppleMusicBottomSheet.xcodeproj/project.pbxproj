@@ -16,6 +16,9 @@
 		AD898DA129C6285A00E7E1A2 /* MusicInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD898DA029C6285A00E7E1A2 /* MusicInfo.swift */; };
 		AD898DA429C6287400E7E1A2 /* View+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD898DA329C6287400E7E1A2 /* View+Extensions.swift */; };
 		AD898DA629C62E5700E7E1A2 /* DragGesture+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD898DA529C62E5700E7E1A2 /* DragGesture+Extensions.swift */; };
+		AD898DA729C6300000E7E1A2 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD898DA829C6300000E7E1A2 /* AudioManager.swift */; };
+		AD898DA929C6300000E7E1A2 /* MusicImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD898DAA29C6300000E7E1A2 /* MusicImporter.swift */; };
+		AD898DAB29C6310000E7E1A2 /* MusicRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD898DAC29C6310000E7E1A2 /* MusicRowView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +33,9 @@
 		AD898DA029C6285A00E7E1A2 /* MusicInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicInfo.swift; sourceTree = "<group>"; };
 		AD898DA329C6287400E7E1A2 /* View+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Extensions.swift"; sourceTree = "<group>"; };
 		AD898DA529C62E5700E7E1A2 /* DragGesture+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DragGesture+Extensions.swift"; sourceTree = "<group>"; };
+		AD898DA829C6300000E7E1A2 /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
+		AD898DAA29C6300000E7E1A2 /* MusicImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicImporter.swift; sourceTree = "<group>"; };
+		AD898DAC29C6310000E7E1A2 /* MusicRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicRowView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,6 +71,8 @@
 				AD898D9A29C6155600E7E1A2 /* View */,
 				AD895EEA29C4F68600EEE999 /* AppleMusicBottomSheetApp.swift */,
 				AD895EEC29C4F68600EEE999 /* ContentView.swift */,
+				AD898DA829C6300000E7E1A2 /* AudioManager.swift */,
+				AD898DAA29C6300000E7E1A2 /* MusicImporter.swift */,
 				AD895EEE29C4F68700EEE999 /* Assets.xcassets */,
 				AD895EF029C4F68700EEE999 /* AppleMusicBottomSheet.entitlements */,
 				AD895EF129C4F68700EEE999 /* Preview Content */,
@@ -87,6 +95,7 @@
 				AD898D9C29C6156000E7E1A2 /* Home.swift */,
 				AD898D9E29C61A5500E7E1A2 /* ExpandedBottomSheet.swift */,
 				AD898DA029C6285A00E7E1A2 /* MusicInfo.swift */,
+				AD898DAC29C6310000E7E1A2 /* MusicRowView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -181,6 +190,9 @@
 				AD898DA129C6285A00E7E1A2 /* MusicInfo.swift in Sources */,
 				AD898DA429C6287400E7E1A2 /* View+Extensions.swift in Sources */,
 				AD898D9F29C61A5500E7E1A2 /* ExpandedBottomSheet.swift in Sources */,
+				AD898DA729C6300000E7E1A2 /* AudioManager.swift in Sources */,
+				AD898DA929C6300000E7E1A2 /* MusicImporter.swift in Sources */,
+				AD898DAB29C6310000E7E1A2 /* MusicRowView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

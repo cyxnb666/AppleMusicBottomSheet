@@ -11,6 +11,7 @@ import SwiftUI
 struct MusicInfo: View {
     @Binding var expandSheet: Bool
     var animation: Namespace.ID
+    @ObservedObject var audioManager: AudioManager
     var body: some View {
         HStack(spacing: 0) {
             /// Adding Matched Geometry Effect (Hero Animation)
@@ -19,18 +20,26 @@ struct MusicInfo: View {
                     GeometryReader {
                         let size = $0.size
                         
-                        Image("Artwork")
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: size.width, height: size.height)
-                            .clipShape(RoundedRectangle(cornerRadius: expandSheet ? 15 : 5, style: .continuous))
+                        if let artwork = audioManager.currentTrack?.artwork {
+                            Image(uiImage: artwork)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: size.width, height: size.height)
+                                .clipShape(RoundedRectangle(cornerRadius: expandSheet ? 15 : 5, style: .continuous))
+                        } else {
+                            Image("Artwork")
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: size.width, height: size.height)
+                                .clipShape(RoundedRectangle(cornerRadius: expandSheet ? 15 : 5, style: .continuous))
+                        }
                     }
                     .matchedGeometryEffect(id: "ARTWORK", in: animation)
                 }
             }
             .frame(width: 45, height: 45)
             
-            Text("Look What You Made Me do")
+            Text(audioManager.currentTrack?.title ?? "No Track Playing")
                 .fontWeight(.semibold)
                 .lineLimit(1)
                 .padding(.horizontal, 15)
@@ -38,14 +47,14 @@ struct MusicInfo: View {
             Spacer(minLength: 0)
             
             Button {
-                
+                audioManager.togglePlayPause()
             } label: {
-                Image(systemName: "pause.fill")
+                Image(systemName: audioManager.isPlaying ? "pause.fill" : "play.fill")
                     .font(.title2)
             }
             
             Button {
-                
+                audioManager.nextTrack()
             } label: {
                 Image(systemName: "forward.fill")
                     .font(.title2)
